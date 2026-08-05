@@ -1,0 +1,10 @@
+{
+  "id": "metaflow",
+  "name": "MetaFlow",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Automate your Obsidian workflow with folder-based metadata rules.",
+  "author": "Yixianrichen",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
