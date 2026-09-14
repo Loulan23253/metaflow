@@ -2,7 +2,8 @@ const {
     Plugin,
     PluginSettingTab,
     Setting,
-    TFile
+    TFile,
+    Notice
 } = require("obsidian");
 
 
@@ -82,8 +83,18 @@ async handleFile(file){
     ){
 
 
+        const folder =
+        (rule.folder || "")
+        .replace(/\/+$/, "");
+
+
+        // 只匹配文件夹本身或其子路径，避免 "Agenda" 误伤 "Agendafoo"
         if(
-            !file.path.startsWith(rule.folder)
+            !folder ||
+            !(
+                file.path === folder ||
+                file.path.startsWith(folder + "/")
+            )
         )
             continue;
 
@@ -619,8 +630,16 @@ btn
 async()=>{
 
 
+const currentIndex =
+this.plugin.settings.rules.indexOf(rule);
+
+
+if(currentIndex === -1)
+    return;
+
+
 this.plugin.settings.rules.splice(
-index,
+currentIndex,
 1
 );
 
@@ -670,6 +689,11 @@ new Setting(container);
 
 
 let keyInput;
+
+
+
+// key 重命名点「保存」之前，value 始终写入当前 key，避免写进旧 key
+let currentKey = key;
 
 
 
@@ -727,11 +751,11 @@ String(value)
 async val=>{
 
 
-rule.properties[key]=
+rule.properties[currentKey]=
 
 val.includes(",")
 ?
-val.split(",")
+val.split(",").map(s=>s.trim()).filter(s=>s!=="")
 :
 val;
 
@@ -776,24 +800,41 @@ async()=>{
 
 
 let newKey =
-keyInput.getValue();
+keyInput.getValue().trim();
 
 
 
 if(
 newKey &&
-newKey!==key
+newKey!==currentKey
 ){
 
 
+if(
+rule.properties[newKey] !== undefined
+){
+
+
+new Notice("该 key 已存在，未保存");
+
+
+return;
+
+
+}
+
+
 let old =
-rule.properties[key];
+rule.properties[currentKey];
 
 
-delete rule.properties[key];
+delete rule.properties[currentKey];
 
 
 rule.properties[newKey]=old;
+
+
+currentKey = newKey;
 
 
 
