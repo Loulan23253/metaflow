@@ -9,6 +9,8 @@ const {
 
 const DEFAULT_SETTINGS = {
 
+    lang: "auto",
+
     rules:[
         {
             folder:"Agenda",
@@ -23,7 +25,36 @@ const DEFAULT_SETTINGS = {
 };
 
 
+// —— 双语文案:zh / en,lang=auto 时跟随系统语言 ——
+const STRINGS = {
 
+    en:{
+        langName:"Interface language",
+        langDesc:"Auto follows the system language.",
+        addRule:"+ Add rule",
+        newRule:"📁 New rule",
+        watchedFolder:"Watched folder",
+        addProperty:"+ Add property",
+        deleteRule:"Delete rule",
+        save:"Save",
+        delete:"Delete",
+        keyExists:"Key already exists — not saved"
+    },
+
+    zh:{
+        langName:"界面语言",
+        langDesc:"Auto 表示跟随系统语言。",
+        addRule:"+ 新增规则",
+        newRule:"📁 新规则",
+        watchedFolder:"监听文件夹",
+        addProperty:"+ 添加 Property",
+        deleteRule:"删除规则",
+        save:"保存",
+        delete:"删除",
+        keyExists:"该 key 已存在，未保存"
+    }
+
+};
 
 
 module.exports = class MetaFlow extends Plugin {
@@ -70,6 +101,24 @@ async onload(){
         )
 
     );
+
+}
+
+
+// 解析界面语言:设置优先，auto 跟随系统(navigator.language)
+t(key){
+
+    const setting =
+    (this.settings && this.settings.lang) || "auto";
+
+    const lang =
+    setting === "auto"
+    ?
+    (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en"
+    :
+    setting;
+
+    return STRINGS[lang][key];
 
 }
 
@@ -164,8 +213,6 @@ async loadSettings(){
 
 
 
-
-
 async saveSettings(){
 
     await this.saveData(
@@ -176,7 +223,6 @@ async saveSettings(){
 
 
 };
-
 
 
 
@@ -200,8 +246,6 @@ constructor(app,plugin){
 
 
 
-
-
 display(){
 
 
@@ -214,12 +258,66 @@ containerEl.empty();
 
 
 
-containerEl.createEl(
-"h2",
-{
-text:"MetaFlow"
+// 界面语言(双语开关,auto 跟随系统)
+
+
+new Setting(containerEl)
+
+.setName(
+this.plugin.t("langName")
+)
+
+.setDesc(
+this.plugin.t("langDesc")
+)
+
+.addDropdown(
+dropdown=>{
+
+
+dropdown
+
+.addOption(
+"auto",
+"Auto"
+)
+
+.addOption(
+"zh",
+"简体中文"
+)
+
+.addOption(
+"en",
+"English"
+)
+
+.setValue(
+this.plugin.settings.lang || "auto"
+)
+
+.onChange(
+async value=>{
+
+
+this.plugin.settings.lang=value;
+
+
+await this.plugin.saveSettings();
+
+
+this.display();
+
+
 }
+
 );
+
+
+}
+
+);
+
 
 
 
@@ -236,7 +334,7 @@ btn=>{
 btn
 
 .setButtonText(
-"+ 新增规则"
+this.plugin.t("addRule")
 )
 
 
@@ -311,8 +409,6 @@ containerEl
 
 
 
-
-
 createRule(
 rule,
 index,
@@ -326,23 +422,13 @@ container.createDiv();
 
 
 
-box.style.border =
-"1px solid var(--background-modifier-border)";
-
-
-box.style.borderRadius =
-"10px";
-
-
-box.style.padding =
-"10px";
-
-
-box.style.marginBottom =
-"12px";
-
-
-
+// 内联样式统一走 setCssStyles(1.5+),避免直接 .style 赋值
+box.setCssStyles({
+    border:"1px solid var(--background-modifier-border)",
+    borderRadius:"10px",
+    padding:"10px",
+    marginBottom:"12px"
+});
 
 
 
@@ -355,17 +441,11 @@ box.createDiv();
 
 
 
-header.style.cursor =
-"pointer";
-
-
-header.style.display =
-"flex";
-
-
-header.style.alignItems =
-"center";
-
+header.setCssStyles({
+    cursor:"pointer",
+    display:"flex",
+    alignItems:"center"
+});
 
 
 
@@ -378,8 +458,10 @@ text:"▼"
 );
 
 
-arrow.style.marginRight =
-"8px";
+
+arrow.setCssStyles({
+    marginRight:"8px"
+});
 
 
 
@@ -394,10 +476,9 @@ rule.folder
 ?
 `📁 ${rule.folder}`
 :
-"📁 新规则"
+this.plugin.t("newRule")
 }
 );
-
 
 
 
@@ -408,8 +489,9 @@ box.createDiv();
 
 
 
-content.style.marginTop =
-"10px";
+content.setCssStyles({
+    marginTop:"10px"
+});
 
 
 
@@ -447,14 +529,13 @@ opened
 
 
 
-
 // 文件夹选择
 
 
 new Setting(content)
 
 .setName(
-"监听文件夹"
+this.plugin.t("watchedFolder")
 )
 
 .addDropdown(
@@ -486,7 +567,7 @@ value
 ?
 `📁 ${value}`
 :
-"📁 新规则";
+this.plugin.t("newRule");
 
 
 
@@ -501,12 +582,12 @@ await this.plugin.saveSettings();
 }
 
 );
+
 // Properties区域
 
 
 const propertyBox =
 content.createDiv();
-
 
 
 
@@ -524,8 +605,6 @@ propertyBox.createEl(
 text:"Properties"
 }
 );
-
-
 
 
 
@@ -563,8 +642,6 @@ renderProperties();
 
 
 
-
-
 // 添加 Property
 
 
@@ -577,7 +654,7 @@ btn=>{
 btn
 
 .setButtonText(
-"+ 添加 Property"
+this.plugin.t("addProperty")
 )
 
 
@@ -609,7 +686,6 @@ renderProperties();
 
 
 
-
 // 删除规则
 
 
@@ -622,7 +698,7 @@ btn=>{
 btn
 
 .setButtonText(
-"删除规则"
+this.plugin.t("deleteRule")
 )
 
 
@@ -672,7 +748,6 @@ box.remove();
 
 
 
-
 createProperty(
 rule,
 key,
@@ -694,7 +769,6 @@ let keyInput;
 
 // key 重命名点「保存」之前，value 始终写入当前 key，避免写进旧 key
 let currentKey = key;
-
 
 
 
@@ -779,8 +853,6 @@ await this.plugin.saveSettings();
 
 
 
-
-
 // 保存 Key
 
 
@@ -791,7 +863,7 @@ btn=>{
 btn
 
 .setButtonText(
-"保存"
+this.plugin.t("save")
 )
 
 
@@ -815,7 +887,9 @@ rule.properties[newKey] !== undefined
 ){
 
 
-new Notice("该 key 已存在，未保存");
+new Notice(
+this.plugin.t("keyExists")
+);
 
 
 return;
@@ -863,7 +937,6 @@ refresh();
 
 
 
-
 // 删除 Property
 
 
@@ -874,7 +947,7 @@ btn=>{
 btn
 
 .setButtonText(
-"删除"
+this.plugin.t("delete")
 )
 
 
@@ -912,7 +985,6 @@ refresh();
 
 
 
-
 getFolders(){
 
 
@@ -931,7 +1003,6 @@ if(file.children){
 folders[file.path]=file.path;
 
 }
-
 
 }
 
