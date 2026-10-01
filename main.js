@@ -38,7 +38,10 @@ const STRINGS = {
         deleteRule:"Delete rule",
         save:"Save",
         delete:"Delete",
-        keyExists:"Key already exists — not saved"
+        keyExists:"Key already exists — not saved",
+        supportName:"Support the developer",
+        supportDesc:"If MetaFlow helps you, buy the author a coffee.",
+        supportButton:"Buy a coffee ☕"
     },
 
     zh:{
@@ -51,7 +54,10 @@ const STRINGS = {
         deleteRule:"删除规则",
         save:"保存",
         delete:"删除",
-        keyExists:"该 key 已存在，未保存"
+        keyExists:"该 key 已存在，未保存",
+        supportName:"支持开发者",
+        supportDesc:"如果 MetaFlow 对你有帮助，请作者喝杯咖啡。",
+        supportButton:"请喝咖啡 ☕"
     }
 
 };
@@ -401,6 +407,60 @@ containerEl
 
 
 
+
+
+// 赞助入口:manifest 提供 fundingUrl 时才显示
+
+
+const funding = this.plugin.manifest && this.plugin.manifest.fundingUrl;
+
+if(
+funding
+){
+
+
+new Setting(containerEl)
+
+.setName(
+this.plugin.t("supportName")
+)
+
+.setDesc(
+this.plugin.t("supportDesc")
+)
+
+.addButton(
+btn=>{
+
+
+btn
+
+.setButtonText(
+this.plugin.t("supportButton")
+)
+
+.setCta()
+
+.onClick(
+()=>{
+
+
+window.open(
+funding
+);
+
+
+}
+
+);
+
+
+}
+
+);
+
+
+}
 }
 
 
